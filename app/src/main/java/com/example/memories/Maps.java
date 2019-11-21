@@ -8,9 +8,13 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Environment;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationServices;
@@ -18,23 +22,39 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.tasks.OnSuccessListener;
+
+import java.io.File;
 
 public class Maps extends FragmentActivity implements OnMapReadyCallback {
 
     GoogleMap mapAPI;
     SupportMapFragment mapFragment;
     private FusedLocationProviderClient mFusedLocationClient;
-
     private static final int GOOGLE_MAPS_REQUEST_CODE = 1;
+    private File[] mlistFiles;
+    SharedPreferences LAT, LON;
+    SharedPreferences.Editor LAT_editor, LON_editor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.maps);
-
+        File directoryName = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_photo");
+        if (!directoryName.exists() ) {
+            //On crée le répertoire (s'il n'existe pas!!)
+            directoryName.mkdirs();
+        }
+        mlistFiles = directoryName.listFiles();
+        LON = getSharedPreferences("LATITUDE", MODE_PRIVATE);
+        LAT = getSharedPreferences("LONGITUDE", MODE_PRIVATE);
+        LAT_editor = LAT.edit();
+        LON_editor = LON.edit();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -52,6 +72,19 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
     }
 
     private void setUpMap(){
+        for(int i=0; i<mlistFiles.length;i++){
+            //recupération des noms des fichiers
+            File current_file = mlistFiles[i];
+            String current_name = current_file.getName();
+            double latitude = Double.valueOf(LAT.getString(current_name, "0"));
+            double longitude = Double.valueOf(LON.getString(current_name, "0"));
+            if(latitude !=0 && longitude != 0) {
+                LatLng current_location = new LatLng(latitude, longitude);
+                Bitmap icone = BitmapFactory.decodeFile(current_file.getAbsolutePath());
+                Bitmap small_icone = Bitmap.createScaledBitmap(icone, 100, 100, false);
+                mapAPI.addMarker(new MarkerOptions().position(current_location).title("Photo" + i).icon(BitmapDescriptorFactory.fromBitmap(small_icone)));
+            }
+        }
         try {
             mFusedLocationClient.getLastLocation()
                     .addOnSuccessListener(this, new OnSuccessListener<Location>() {
@@ -61,9 +94,9 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
                             if (location != null && mapAPI != null) {
 
                                 LatLng moi = new LatLng(location.getLatitude(),location.getLongitude());
-                                mapAPI.addMarker(new MarkerOptions().position(moi).title("Moi"));
-
+                                //mapAPI.addMarker(new MarkerOptions().position(moi).title("Moi"));
                                 mapAPI.moveCamera(CameraUpdateFactory.newLatLng(moi));
+
                             }
                         }
                     });

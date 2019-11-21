@@ -10,6 +10,13 @@
     android:padding="16dp"
     tools:context=".Camera">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/camera_test_text"
+        android:textSize="10dp"
+        />
+
     <ImageView
         android:id="@+id/camera_image"
         android:layout_weight="9"
