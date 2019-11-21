@@ -1,6 +1,7 @@
 package com.example.memories;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -38,6 +39,7 @@ public class Gallery extends AppCompatActivity {
     protected GridView gridview;
     protected File[] mlistFiles;
     private static final int MY_CAMERA_REQUEST_CODE = 1;
+    SharedPreferences sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,12 +94,16 @@ public class Gallery extends AppCompatActivity {
 
         // Gestion du swipe sur la gridview
         gridview.setOnTouchListener(new OnSwipeTouchListener(Gallery.this) {
+
+            @Override
             public void onSwipeTop() {
                 //On swipe vers le haut
             }
+            @Override
             public void onSwipeRight() {
                 //On swipe vers la droite
             }
+            @Override
             public void onSwipeLeft() {
                 //On swipe vers la gauche
                 //On lance Camera
@@ -106,9 +112,11 @@ public class Gallery extends AppCompatActivity {
                 overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left);
 
             }
+            @Override
             public void onSwipeBottom() {
                 //On swipe vers le bas
             }
+
 
         });
     }
@@ -129,7 +137,7 @@ public class Gallery extends AppCompatActivity {
         public long getItemId(int position) {return position;}
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
 
             if (convertView == null) {
 
@@ -148,12 +156,35 @@ public class Gallery extends AppCompatActivity {
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = 20;
 
-            // Affiche les images
+            // Affiche les images dans la Galerie
             imageView.setImageBitmap(BitmapFactory.decodeFile(mlistFiles[position].getAbsolutePath(), options));
 
+
+            // Les SharedPreferences sont à récupérer depuis un context
+            sharedPreferences = c.getSharedPreferences("click_photo",c.MODE_PRIVATE);
+
+            // Ecoute sur les images de la Galerie
+            imageView.setOnClickListener(new ImageView.OnClickListener() {
+
+                @Override
+                public void onClick(View view) {
+                    // Afin de sauvegarder un élémént, on ouvre un éditeur, avec sharedPreferences.edit() (sans oubliez d’appeler la méthode .apply() )
+                    sharedPreferences
+                            .edit()
+                            .putString("photo_actuelle", mlistFiles[position].getAbsolutePath()) //enregistre le chemin absolu de la photo dans la sharedpreferences
+                            .apply();
+
+                    // Changement d'activity
+                    Intent intent = new Intent(Gallery.this, BigImage.class);
+                    startActivity(intent);
+                }
+            });
             return imageView;
         }
+
     }
+
+
     @Override
     protected void onResume() {
         super.onResume();

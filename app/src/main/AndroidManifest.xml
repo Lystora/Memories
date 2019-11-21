@@ -47,6 +47,7 @@
         </activity>
         <activity android:name=".Camera" />
         <activity android:name=".Gallery" />
+        <activity android:name=".BigImage" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
