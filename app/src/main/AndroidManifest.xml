@@ -46,7 +46,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".Camera" />
-        <activity android:name=".Gallery" />
+        <activity android:name=".Gallery"
+            android:label="Galerie"
+            />
         <activity android:name=".BigImage" />
 
         <provider
