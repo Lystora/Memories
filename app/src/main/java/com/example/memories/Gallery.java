@@ -25,34 +25,47 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
 
 import java.io.File;
 
 public class Gallery extends AppCompatActivity {
-    View GalleryView;
-    private File[] mlistFiles;
+
+    protected View GalleryView;
+    protected ImageView imageView;
+    protected GridView gridview;
+    protected File[] mlistFiles;
     private static final int MY_CAMERA_REQUEST_CODE = 1;
-    private static final int PICTURE_RESULT = 1;
-    ImageView imageView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.gallery);
+
+        // On accède au dossier "test_photo"
+        File repertoire = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_photo");
+
+        // Si le répertoire n'exsiste pas :
+        if (!repertoire.exists() ) {
+            try{
+                // Création du répertoire
+                repertoire.mkdirs();
+                Toast.makeText(this, "Le dossier 'test_photo' est créer !" , Toast.LENGTH_LONG).show();
+            }catch (Exception e){
+                Toast.makeText(this, "Impossible de créer le dossier !" , Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+
+        mlistFiles = repertoire.listFiles();
+
+        // Initialisation de la View Galerie
         GalleryView = (View) findViewById(R.id.Gallery_view);
 
-        File directoryName = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_photo");
-        if (!directoryName.exists() ) {
-            //On crée le répertoire (s'il n'existe pas!!)
-            directoryName.mkdirs();
-        }
-        mlistFiles = directoryName.listFiles();
-
-        //File extDir = Environment.getExternalStorageDirectory();
-        //mlistFiles = new File(extDir, "DCIM/camera").listFiles();
-
-        GridView gridview = (GridView) findViewById(R.id.gridview);
+        // Initialisation de la GridView Galerie
+        gridview = (GridView) findViewById(R.id.gridview);
         gridview.setAdapter(new ImageAdapter(this));
 
         //Gestion du swipe sur la view
@@ -76,7 +89,8 @@ public class Gallery extends AppCompatActivity {
             }
 
         });
-        //Gestion du swipe sur la gridview
+
+        // Gestion du swipe sur la gridview
         gridview.setOnTouchListener(new OnSwipeTouchListener(Gallery.this) {
             public void onSwipeTop() {
                 //On swipe vers le haut
@@ -98,31 +112,43 @@ public class Gallery extends AppCompatActivity {
 
         });
     }
+
+
     public class ImageAdapter extends BaseAdapter {
-        private Context mContext;
+        private Context c;
 
-        public ImageAdapter(Context c) {mContext = c;}
+        public ImageAdapter(Context c) {this.c = c;}
 
+        @Override
         public int getCount() {return mlistFiles.length;}
 
+        @Override
         public Object getItem(int position) {return position;}
 
+        @Override
         public long getItemId(int position) {return position;}
 
+        @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
             if (convertView == null) {
-                imageView = new ImageView(mContext);
-                imageView.setLayoutParams(new GridView.LayoutParams(200, 200));
+
+                // Créer une nouvelle vue
+                imageView = new ImageView(this.c);
+                imageView.setLayoutParams(new GridView.LayoutParams(400, 400));
                 imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 imageView.setPadding(8, 8, 8, 8);
             } else {
+
+                // On utilise convertView s'il est disponible
                 imageView = (ImageView) convertView;
             }
 
+            // Demande au décodeur de sous-échantillonner l'image d'origine, en renvoyant une image plus petite pour économiser de la mémoire.
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = 20;
 
+            // Affiche les images
             imageView.setImageBitmap(BitmapFactory.decodeFile(mlistFiles[position].getAbsolutePath(), options));
 
             return imageView;
