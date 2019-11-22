@@ -7,14 +7,22 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.LocationServices;
@@ -81,8 +89,13 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
             if(latitude !=0 && longitude != 0) {
                 LatLng current_location = new LatLng(latitude, longitude);
                 Bitmap icone = BitmapFactory.decodeFile(current_file.getAbsolutePath());
-                Bitmap small_icone = Bitmap.createScaledBitmap(icone, 100, 100, false);
-                mapAPI.addMarker(new MarkerOptions().position(current_location).title("Photo" + i).icon(BitmapDescriptorFactory.fromBitmap(small_icone)));
+                Bitmap small_icone = Bitmap.createScaledBitmap(icone, 120, 120, false);
+                mapAPI.addMarker(new MarkerOptions()
+                        .position(current_location)
+                        .title("Photo" + i)
+                        .icon(BitmapDescriptorFactory.fromBitmap(getMarkerBitmapFromView(icone)))
+                        .anchor(0.5f, 1));
+                        //.icon(BitmapDescriptorFactory.fromBitmap(small_icone)));
             }
         }
         try {
@@ -107,21 +120,31 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
         }
     }
 
+    private Bitmap getMarkerBitmapFromView(Bitmap img){
+        View customMarkerView = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.view_custom_marker, null);
+        ImageView markerImageView = (ImageView) customMarkerView.findViewById(R.id.profile_image);
+        markerImageView.setImageBitmap(img);
+
+        customMarkerView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        customMarkerView.layout(0, 0, customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight());
+        customMarkerView.buildDrawingCache();
+
+        Bitmap returnedBitmap = Bitmap.createBitmap(customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight(),
+                Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(returnedBitmap);
+        canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC_IN);
+        Drawable drawable = customMarkerView.getBackground();
+        if (drawable != null)
+            drawable.draw(canvas);
+        customMarkerView.draw(canvas);
+        return returnedBitmap;
+    }
     protected void Permissions() {
         super.onResume();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, GOOGLE_MAPS_REQUEST_CODE);
         }
         else setUpMap();
-
-        /*if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, GOOGLE_MAPS_REQUEST_CODE);
-        }
-        else setUpMap();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, GOOGLE_MAPS_REQUEST_CODE);
-        }
-        else setUpMap();*/
     }
 
     public void onRequestPermissionsResult(int requestCode,
