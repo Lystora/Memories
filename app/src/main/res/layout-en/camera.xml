@@ -19,14 +19,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
-            android:text="Swipe gauche : Galerie"/>
+            android:text="Swipe left to Gallery"/>
 
         <TextView
             android:id="@+id/camera_test_text2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
-            android:text="Swipe droite : Google Maps" />
+            android:text="Swipe right to Google Maps" />
     </RelativeLayout>
 
 
@@ -35,7 +35,7 @@
         android:layout_weight="9"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/secouer"/>
+        android:src="@drawable/shake"/>
 
     <Button
         android:id="@+id/camera_btn_save"
@@ -47,7 +47,7 @@
         android:layout_margin="2dp"
         android:enabled="false"
         android:visibility="invisible"
-        android:text="ENREGISTRER"/>
+        android:text="SAVE"/>
 
     <Button
         android:id="@+id/camera_btn"
@@ -57,6 +57,6 @@
         android:textColor="@android:color/white"
         android:layout_margin="2dp"
         android:layout_height="wrap_content"
-        android:text="OUVRIR CAMERA"/>
+        android:text="OPEN CAMERA"/>
 
 </LinearLayout>

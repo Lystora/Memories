@@ -48,7 +48,6 @@ public class Gallery extends AppCompatActivity {
     protected File[] mlistFiles;
     private static final int MY_CAMERA_REQUEST_CODE = 1;
     SharedPreferences sharedPreferences;
-    boolean isImageFitToScreen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

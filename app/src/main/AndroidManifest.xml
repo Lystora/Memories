@@ -48,7 +48,7 @@
         </activity>
         <activity android:name=".Camera" />
         <activity android:name=".Gallery"
-            android:label="Galerie"
+            android:label="Gallery"
             />
         <activity android:name=".BigImage" />
 
