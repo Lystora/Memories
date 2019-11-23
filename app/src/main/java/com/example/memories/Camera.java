@@ -1,5 +1,6 @@
 package com.example.memories;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,6 +13,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -25,6 +28,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.view.View;
@@ -48,7 +52,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Timer;
 import java.util.prefs.Preferences;
 
 public class Camera extends AppCompatActivity {
@@ -72,6 +78,12 @@ public class Camera extends AppCompatActivity {
     View CameraView;
 
     MediaPlayer test_son1, test_son2;
+
+    Bitmap image2;
+    Bitmap bitmap;
+    String picture_location;
+
+    Uri photoUri;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,6 +108,13 @@ public class Camera extends AppCompatActivity {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        if(savedInstanceState != null){
+            photoUri =  savedInstanceState.getParcelable("UriImage");
+            imgview.setImageURI(photoUri);
+
+            btn_save.setEnabled(savedInstanceState.getBoolean("enable"));
+            btn_save.setVisibility(savedInstanceState.getInt("visible"));
+        }
 
         // ENREGISTREMENT DE LA PHOTO + ECOUTE SUR LE BOUTON ENREGISTRER
         btn_save.setOnClickListener(new Button.OnClickListener() {
@@ -110,7 +129,9 @@ public class Camera extends AppCompatActivity {
                 setImgLatLng(name+".jpg");
                 image = null;
                 imgview.setImageBitmap(image);
+
                 Toast.makeText(getApplicationContext(),"Picture saved !", Toast.LENGTH_LONG).show();
+
                 btn_save.setEnabled(false);
                 btn_save.setVisibility(View.INVISIBLE);
 
@@ -137,7 +158,7 @@ public class Camera extends AppCompatActivity {
                         photoPath = photoFile.getAbsolutePath(); // Initialise le chemin complet de la photo
 
                         //Accès au fichier
-                        Uri photoUri = FileProvider.getUriForFile(Camera.this,
+                        photoUri = FileProvider.getUriForFile(Camera.this,
                                 Camera.this.getApplicationContext().getPackageName()+".provider", photoFile);
 
                         //Enregistre la photo dans le fichier temporaire
@@ -192,28 +213,46 @@ public class Camera extends AppCompatActivity {
 
             @Override
             public void onShake(int count) {
-                /*
-                 * The following method, "handleShakeEvent(count):" is a stub //
-                 * method you would use to setup whatever you want done once the
-                 * device has been shook.
-                 */
-                //handleShakeEvent(count);
 
+                if(test_son1 == null && photoUri!=null){
 
-                if(test_son1 == null && image!=null){
-                    test_son1 = MediaPlayer.create(getApplicationContext(),R.raw.delete_voice);
-                    test_son1.start();
-                    test_son1 = null;
-                    image = null;
-                    imgview.setImageBitmap(image);
+                    if(Locale.getDefault().getDisplayLanguage().equals("English")){
+                        test_son1 = MediaPlayer.create(getApplicationContext(),R.raw.delete_voice);
+                        test_son1.start();
 
-                    Toast.makeText(getApplicationContext(),"Current picture has been deleted !", Toast.LENGTH_LONG).show();
+                        test_son1 = null;
+
+                        image = null;
+                        photoUri = null;
+                        imgview.setImageBitmap(image);
+
+                        Toast.makeText(getApplicationContext(),"Current picture has been deleted !", Toast.LENGTH_LONG).show();
+                    }else{
+                        test_son1 = MediaPlayer.create(getApplicationContext(),R.raw.supp_photo);
+                        test_son1.start();
+
+                        test_son1 = null;
+
+                        image = null;
+                        photoUri = null;
+                        imgview.setImageBitmap(image);
+
+                        Toast.makeText(getApplicationContext(),"La photo a été suprrimer !", Toast.LENGTH_LONG).show();
+                    }
+
 
                 }else{
-                    test_son2 = MediaPlayer.create(getApplicationContext(),R.raw.no_picture);
-                    test_son2.start();
+                    if(Locale.getDefault().getDisplayLanguage().equals("English")) {
+                        test_son2 = MediaPlayer.create(getApplicationContext(), R.raw.no_picture);
+                        test_son2.start();
 
-                    Toast.makeText(getApplicationContext(),"There is no picture !", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), "There is no picture !", Toast.LENGTH_LONG).show();
+                    }else{
+                        test_son2 = MediaPlayer.create(getApplicationContext(), R.raw.pas_photo);
+                        test_son2.start();
+
+                        Toast.makeText(getApplicationContext(), "Il n'y a pas de photo !", Toast.LENGTH_LONG).show();
+                    }
 
                 }
 
@@ -228,8 +267,20 @@ public class Camera extends AppCompatActivity {
     // METHODE POUR ENREGISTRER LA PHOTO DANS UN REPERTOIRE, LA CONVERTIR EN JPEG  ET REDONNER UN NOM
     public void savePicture(Bitmap bm, String imgName){
         OutputStream fOut = null;
-        String strDirectory = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_photo";
 
+        File repertoire = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_photo");
+        if (!repertoire.exists() ) {
+            try{
+                // Création du répertoire
+                repertoire.mkdirs();
+                Toast.makeText(this, "Le dossier 'test_photo' est créer !" , Toast.LENGTH_LONG).show();
+            }catch (Exception e){
+                Toast.makeText(this, "Impossible de créer le dossier !" , Toast.LENGTH_LONG).show();
+                e.printStackTrace();
+            }
+        }
+
+        String strDirectory = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_photo";
         File f = new File(strDirectory, imgName);
 
         // Ouverture d'un flux d'écriture afin de remodeler notre image : bitmap -> jpeg et le répertoire où elle doit être conserver
@@ -246,6 +297,24 @@ public class Camera extends AppCompatActivity {
         } catch (Exception e) {e.printStackTrace();}
     }
 
+    protected void setImgLatLng(final String namefile){
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, GOOGLE_MAPS_REQUEST_CODE);
+        }else{
+            mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    if(location != null){
+                        LatLng current_location = new LatLng(location.getLatitude(), location.getLongitude());
+                        LAT_editor.putString(namefile,Double.toString(current_location.latitude));
+                        LON_editor.putString(namefile,Double.toString(current_location.longitude));
+                        LAT_editor.apply(); LON_editor.apply();
+                    }
+                }
+            });
+        }
+    }
 
     @Override
     protected void onResume() {
@@ -270,38 +339,6 @@ public class Camera extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==PICTURE_RESULT && resultCode == RESULT_OK){
-
-            image = BitmapFactory.decodeFile(photoPath); // Récupère l'image
-            imgview.setImageBitmap(image);               // Insère l'image dans l'ImageView
-
-            //Activation du bouton ENREGISTRER après avoir pris une photo
-            btn_save.setEnabled(true);
-            btn_save.setVisibility(View.VISIBLE);
-        }
-    }
-    protected void setImgLatLng(final String namefile){
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, GOOGLE_MAPS_REQUEST_CODE);
-        }else{
-            mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    if(location != null){
-                        LatLng current_location = new LatLng(location.getLatitude(), location.getLongitude());
-                        LAT_editor.putString(namefile,Double.toString(current_location.latitude));
-                        LON_editor.putString(namefile,Double.toString(current_location.longitude));
-                        LAT_editor.apply(); LON_editor.apply();
-                    }
-                }
-            });
-        }
-    }
-
-    @Override
     protected void onDestroy() {
         super.onDestroy();
         if(test_son1 != null){
@@ -310,5 +347,29 @@ public class Camera extends AppCompatActivity {
         if(test_son2 != null){
             test_son2.release();
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==PICTURE_RESULT && resultCode == RESULT_OK){
+
+            image = BitmapFactory.decodeFile(photoPath); // Récupère l'image
+            //imgview.setImageBitmap(image);               // Insère l'image dans l'ImageView
+            imgview.setImageURI(photoUri);
+
+            //Activation du bouton ENREGISTRER après avoir pris une photo
+            btn_save.setEnabled(true);
+            btn_save.setVisibility(View.VISIBLE);
+        }
+    }
+
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if(photoUri != null) outState.putParcelable("UriImage", photoUri);
+        outState.putInt("visible",btn_save.getVisibility());
+        outState.putBoolean("enable",btn_save.isEnabled());
     }
 }
