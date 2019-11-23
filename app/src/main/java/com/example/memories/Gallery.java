@@ -2,10 +2,16 @@ package com.example.memories;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.TypedValue;
+import android.view.MotionEvent;
 import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.memories.util.OnSwipeTouchListener;
@@ -23,9 +29,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import java.io.File;
@@ -40,11 +48,18 @@ public class Gallery extends AppCompatActivity {
     protected File[] mlistFiles;
     private static final int MY_CAMERA_REQUEST_CODE = 1;
     SharedPreferences sharedPreferences;
+    boolean isImageFitToScreen;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.gallery);
+
+        // Cache la barre de titre.
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+
+        // L'application est en fullscreen.
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         // On accède au dossier "test_photo"
         File repertoire = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_photo");
@@ -66,9 +81,11 @@ public class Gallery extends AppCompatActivity {
         // Initialisation de la View Galerie
         GalleryView = (View) findViewById(R.id.Gallery_view);
 
-        // Initialisation de la GridView Galerie
+        // Initialisation de la GridView
         gridview = (GridView) findViewById(R.id.gridview);
         gridview.setAdapter(new ImageAdapter(this));
+
+
 
         //Gestion du swipe sur la view
         GalleryView.setOnTouchListener(new OnSwipeTouchListener(Gallery.this) {
@@ -140,7 +157,6 @@ public class Gallery extends AppCompatActivity {
         public View getView(final int position, View convertView, ViewGroup parent) {
 
             if (convertView == null) {
-
                 // Créer une nouvelle vue
                 imageView = new ImageView(this.c);
                 imageView.setLayoutParams(new GridView.LayoutParams(400, 400));
@@ -179,6 +195,11 @@ public class Gallery extends AppCompatActivity {
                     startActivity(intent);
                 }
             });
+
+                TypedValue outValue = new TypedValue();
+                getApplicationContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+                imageView.setBackgroundResource(outValue.resourceId);
+
             return imageView;
         }
 

@@ -15,6 +15,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
@@ -53,17 +54,24 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.maps);
+
+
         File directoryName = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "test_photo");
+        // Si le répertoire n'existe pas, on le crée
         if (!directoryName.exists() ) {
-            //On crée le répertoire (s'il n'existe pas!!)
             directoryName.mkdirs();
         }
+
+        // Récupération de toutes les photos présentes dans le répertoire;
         mlistFiles = directoryName.listFiles();
+
         LON = getSharedPreferences("LATITUDE", MODE_PRIVATE);
         LAT = getSharedPreferences("LONGITUDE", MODE_PRIVATE);
         LAT_editor = LAT.edit();
         LON_editor = LON.edit();
+
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
@@ -71,25 +79,22 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mapAPI = googleMap;
-
         Permissions();
-
-       /*LatLng Maharashtra = new LatLng(19.389137, 76.031094);
-        mapAPI.addMarker(new MarkerOptions().position(Maharashtra).title("Maharashtra"));
-        mapAPI.moveCamera(CameraUpdateFactory.newLatLng(Maharashtra));*/
     }
+
 
     private void setUpMap(){
         for(int i=0; i<mlistFiles.length;i++){
             //recupération des noms des fichiers
             File current_file = mlistFiles[i];
             String current_name = current_file.getName();
+
             double latitude = Double.valueOf(LAT.getString(current_name, "0"));
             double longitude = Double.valueOf(LON.getString(current_name, "0"));
             if(latitude !=0 && longitude != 0) {
                 LatLng current_location = new LatLng(latitude, longitude);
                 Bitmap icone = BitmapFactory.decodeFile(current_file.getAbsolutePath());
-                Bitmap small_icone = Bitmap.createScaledBitmap(icone, 120, 120, false);
+                //Bitmap small_icone = Bitmap.createScaledBitmap(icone, 120, 120, false);
                 mapAPI.addMarker(new MarkerOptions()
                         .position(current_location)
                         .title("Photo" + i)
@@ -99,8 +104,7 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
             }
         }
         try {
-            mFusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+            mFusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
                             // Got last known location. In some rare situations this can be null.
@@ -112,14 +116,16 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
 
                             }
                         }
-                    });
-
+            });
             mapAPI.setMyLocationEnabled(true);
+
         } catch (SecurityException e) {
             Toast.makeText(this, "error", Toast.LENGTH_LONG).show();
         }
     }
 
+
+    // Fonction qui réadapte l'image sur Google Map
     private Bitmap getMarkerBitmapFromView(Bitmap img){
         View customMarkerView = ((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE)).inflate(R.layout.view_custom_marker, null);
         ImageView markerImageView = (ImageView) customMarkerView.findViewById(R.id.profile_image);
@@ -127,12 +133,11 @@ public class Maps extends FragmentActivity implements OnMapReadyCallback {
 
         customMarkerView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
         customMarkerView.layout(0, 0, customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight());
-        customMarkerView.buildDrawingCache();
+        customMarkerView.buildDrawingCache(true);
 
-        Bitmap returnedBitmap = Bitmap.createBitmap(customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight(),
-                Bitmap.Config.ARGB_8888);
+        Bitmap returnedBitmap = Bitmap.createBitmap(customMarkerView.getMeasuredWidth(), customMarkerView.getMeasuredHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(returnedBitmap);
-        canvas.drawColor(Color.WHITE, PorterDuff.Mode.SRC_IN);
+        canvas.drawColor(Color.BLUE, PorterDuff.Mode.SRC_IN);
         Drawable drawable = customMarkerView.getBackground();
         if (drawable != null)
             drawable.draw(canvas);

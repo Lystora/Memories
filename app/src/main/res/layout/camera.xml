@@ -11,18 +11,31 @@
     android:background="@android:color/holo_blue_light"
     tools:context=".Camera">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/camera_test_text"
-        android:textSize="10dp"
-        />
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:id="@+id/camera_test_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="Swipe left to Gallery"/>
+
+        <TextView
+            android:id="@+id/camera_test_text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:text="Swipe right to Google Maps" />
+    </RelativeLayout>
+
 
     <ImageView
         android:id="@+id/camera_image"
         android:layout_weight="9"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:src="@drawable/shake"/>
 
     <Button
         android:id="@+id/camera_btn_save"
@@ -40,7 +53,7 @@
         android:id="@+id/camera_btn"
         android:layout_weight="1"
         android:layout_width="match_parent"
-        android:background="@android:color/holo_red_dark"
+        android:background="@android:color/black"
         android:textColor="@android:color/white"
         android:layout_margin="2dp"
         android:layout_height="wrap_content"
